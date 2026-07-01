@@ -38,13 +38,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Generate raw token for the email link
     const rawToken = randomBytes(32).toString("hex");
-
-    // Store only the hashed version in DB
-    const hashedToken = createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
+    const hashedToken = createHash("sha256").update(rawToken).digest("hex");
 
     const user = await User.create({
       name,
@@ -54,7 +49,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       verificationToken: hashedToken,
     });
 
-    // Build the link that goes in the email
     const verifyUrl = `${process.env.CLIENT_URL}/verify/${rawToken}`;
 
     const html = `
@@ -62,40 +56,31 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         <h2 style="color:#6366F1">Verify your SnipHub email</h2>
         <p>Hello ${user.name},</p>
         <p>Thanks for signing up! Click the button below to verify your email address and activate your account.</p>
-        <a
-          href="${verifyUrl}"
-          style="
-            display:inline-block;
-            background:#6366F1;
-            color:white;
-            padding:12px 24px;
-            border-radius:8px;
-            text-decoration:none;
-            margin:20px 0;
-            font-weight:bold;
-          "
-        >
+        <a href="${verifyUrl}" style="display:inline-block;background:#6366F1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;margin:20px 0;font-weight:bold;">
           Verify Email
         </a>
         <p style="color:#888;font-size:13px">Or copy and paste this link into your browser:</p>
         <p style="color:#888;font-size:13px;word-break:break-all">${verifyUrl}</p>
         <p style="color:#888;font-size:13px">This link will expire in 24 hours.</p>
         <hr style="border:none;border-top:1px solid #eee;margin:20px 0" />
-        <small style="color:#aaa">If you didn't create a SnipHub account, you can safely ignore this email.</small>
+        <small style="color:#aaa">If you didn't create a SnipVault account, you can safely ignore this email.</small>
       </div>
     `;
 
-    await sendEmail({
-      to: user.email,
-      subject: "Verify your SnipHub email",
-      html,
-    });
-
-    // Don't issue tokens — user must verify first
+    // Respond immediately — don't block the user on email delivery
     res.status(201).json({
       success: true,
       message:
         "Account created! Please check your email to verify your account.",
+    });
+
+    // Send email in the background, after the response is already sent
+    sendEmail({
+      to: user.email,
+      subject: "Verify your SnipVault email",
+      html,
+    }).catch((err) => {
+      console.error("Failed to send verification email:", err);
     });
   } catch (error) {
     console.error(error);
