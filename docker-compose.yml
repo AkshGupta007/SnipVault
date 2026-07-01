@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  # MongoDB container
+  mongo:
+    image: mongo:7
+    container_name: snipvault_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # Backend container
+  server:
+    build: ./Server
+    container_name: snipvault_server
+    ports:
+      - "5000:5000"
+    environment:
+        - ./Server/.env
+
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
