@@ -14,8 +14,12 @@ connectDB();
 
 const app = express();
 const port = process.env.PORT ?? 5000;
-
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL, // e.g. https://your-frontend.onrender.com
+    credentials: true, // needed if you're using cookies for JWT/session
+  }),
+);
 app.use(express.json());
 app.use(passport.initialize());
 
@@ -26,6 +30,11 @@ app.get("/", (req: Request, res: Response) => {
 app.use('/api/auth',authroutes);
 app.use("/api/snippets", snippetRoutes);
 app.use("/api/auth", GoogleRoutes);
+
+app.use((err: any, req: Request, res: Response, next: any) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Something went wrong" });
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

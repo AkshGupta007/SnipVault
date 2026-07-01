@@ -12,25 +12,25 @@ passport.use(
     async (_accessToken, _refreshToken, profile, done) => {
       try {
 
-            console.log("Google profile email:", profile.emails?.[0]?.value);
-            console.log("Google profile id:", profile.id);
+            // console.log("Google profile email:", profile.emails?.[0]?.value);
+            // console.log("Google profile id:", profile.id);
 
         // Check if user already exists
         let user = await User.findOne({ googleId: profile.id });
 
-            console.log("Found by googleId:", user);
+            // console.log("Found by googleId:", user);
 
         if (user) return done(null, user);
 
         const email = profile.emails?.[0]?.value.toLowerCase();
-        console.log("Extracted email:", email);
+        // console.log("Extracted email:", email);
         if (!email) {
           return done(new Error("Google profile has no email address"));
         }
 
         // Check if email already registered normally
         const existing = await User.findOne({ email });
-        console.log("Found by email:", existing);
+        // // console.log("Found by email:", existing);
 
         if (existing) {
           // Link Google to existing account
@@ -39,7 +39,7 @@ passport.use(
             existing.isVerified = true;
 
           await existing.save();
-             console.log("Linked existing account");
+            //  console.log("Linked existing account");
           return done(null, existing);
         }
 
@@ -53,7 +53,7 @@ passport.use(
           avatar,
         });
 
-         console.log("Creating new Google user");
+        //  console.log("Creating new Google user");
 
         return done(null, user);
       } catch (err) {
